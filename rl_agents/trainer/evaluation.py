@@ -100,7 +100,22 @@ class Evaluation(object):
         if display_agent:
             try:
                 # Render the agent within the environment viewer, if supported
-                self.env.render()
+                try:
+                    # 尝试渲染
+                    self.env.render()
+                except Exception as e:
+                    # 检查错误信息中是否包含"before calling `env.reset()`"关键词
+                    if "before calling `env.reset()`" in str(e):
+                        # 这是特定于重置的错误
+                        print("Resetting environment due to rendering error...")
+                        self.env.reset()
+                        try:
+                            self.env.render()
+                        except Exception as inner_e:
+                            print(f"Secondary rendering failed: {str(inner_e)}")
+                    else:
+                        # 其他错误类型
+                        print(f"Rendering failed: {str(e)}")
                 self.env.unwrapped.viewer.directory = self.run_directory
                 self.env.unwrapped.viewer.set_agent_display(
                     lambda agent_surface, sim_surface: AgentGraphics.display(self.agent, agent_surface, sim_surface))
